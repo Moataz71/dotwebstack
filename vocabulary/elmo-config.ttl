@@ -1,0 +1,397 @@
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#>.
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
+@prefix elmo: <http://bp4mc2.org/elmo/def#>.
+@prefix xhtml: <http://www.w3.org/1999/xhtml/vocab#>.
+@prefix config: <http://dotwebstack.org/elmo/stage#>.
+
+# ========================
+#
+# HOMEPAGE AND MENU
+#
+# ========================
+
+config:Home rdf:type elmo:Representation;
+    elmo:contains config:Menu;
+    elmo:appearance elmo:HtmlAppearance;
+    elmo:data [
+        rdfs:label "DotWebStack publication"^^xsd:string
+    ];
+    elmo:index "1"^^xsd:string;
+    elmo:url-pattern "/dotwebstack(/|)$"^^xsd:string
+.
+
+config:Menu rdf:type elmo:Representation;
+    elmo:appearance elmo:NavbarSearchAppearance;
+    elmo:data [
+        rdfs:label "DotWebStack"^^xsd:string;
+        elmo:data [
+            rdfs:label "Checks"^^xsd:string;
+            elmo:data [
+                rdfs:label "Term usage"^^xsd:string;
+                xhtml:link "query/termusage"^^xsd:string;
+                elmo:index "1"^^xsd:string
+            ];
+            elmo:data [
+                rdfs:label "Shape usage"^^xsd:string;
+                xhtml:link "query/shapeusage"^^xsd:string;
+                elmo:index "2"^^xsd:string
+            ];
+            elmo:index "4"^^xsd:string
+        ];
+        elmo:data [
+            rdfs:label "Elmo vocabulary"^^xsd:string;
+            xhtml:link "query/elmo"^^xsd:string;
+            elmo:index "1"^^xsd:string
+        ];
+        elmo:data [
+            rdfs:label "Diagrams"^^xsd:string;
+            elmo:data [
+                rdfs:label "Core"^^xsd:string;
+                xhtml:link "query/diagram?category=core&format=yed"^^xsd:string;
+                elmo:index "1"^^xsd:string
+            ];
+            elmo:data [
+                rdfs:label "System"^^xsd:string;
+                xhtml:link "query/diagram?category=system&format=yed"^^xsd:string;
+                elmo:index "2"^^xsd:string
+            ];
+            elmo:data [
+                rdfs:label "Default endpoint"^^xsd:string;
+                xhtml:link "query/diagram?category=defaultendpoint&format=yed"^^xsd:string;
+                elmo:index "5"^^xsd:string
+            ];
+            elmo:data [
+                rdfs:label "Parameter mapping"^^xsd:string;
+                xhtml:link "query/diagram?category=mapper&format=yed"^^xsd:string;
+                elmo:index "3"^^xsd:string
+            ];
+            elmo:data [
+                rdfs:label "Frontend"^^xsd:string;
+                xhtml:link "query/diagram?category=frontend&format=yed"^^xsd:string;
+                elmo:index "4"^^xsd:string
+            ];
+            elmo:index "2"^^xsd:string
+        ];
+        elmo:data [
+            rdfs:label "Vocabularies"^^xsd:string;
+            elmo:data [
+                rdfs:label "Frontend"^^xsd:string;
+                xhtml:link "query/diagram?category=frontend"^^xsd:string;
+                elmo:index "3"^^xsd:string
+            ];
+            elmo:data [
+                rdfs:label "System"^^xsd:string;
+                xhtml:link "query/diagram?category=system"^^xsd:string;
+                elmo:index "1"^^xsd:string
+            ];
+            elmo:data [
+                rdfs:label "Parameter mapping"^^xsd:string;
+                xhtml:link "query/diagram?category=mapper"^^xsd:string;
+                elmo:index "2"^^xsd:string
+            ];
+            elmo:index "3"^^xsd:string
+        ];
+        xhtml:search "search"^^xsd:string
+    ];
+    elmo:index "~"^^xsd:string
+.
+
+# ========================
+#
+# DIAGRAMS GENERATION
+#
+# ========================
+
+config:SystemDiagram rdf:type elmo:Representation;
+  elmo:url-pattern "/query/diagram$";
+  elmo:index "1"^^xsd:string;
+  elmo:contains config:Menu;
+  elmo:appearance elmo:VocabularyAppearance;
+  elmo:query '''
+    PREFIX container: <http://localhost:8080/dotwebstack/container/>
+    CONSTRUCT {
+      ?s ?p ?o.
+      ?o ?op ?oo.
+      ?oo ?oop ?ooo.
+      ?node sh:property ?node.
+      ?node sh:path skos:inScheme.
+      ?node sh:hasValue ?node.
+      ?item skos:inScheme ?node.
+      ?item rdfs:label ?itemlabel.
+      ?concept skos:inScheme ?scheme.
+      ?concept rdfs:label ?conceptlabel.
+    }
+    WHERE {
+      GRAPH container:elmo {
+        ?s ?p ?o.
+        OPTIONAL {
+          ?o ?op ?oo.
+          OPTIONAL {
+            ?oo ?oop ?ooo.
+          }
+        }
+        OPTIONAL {
+          ?s sh:property ?lp.
+          ?lp sh:node ?node.
+          ?lp sh:in/rdf:rest*/rdf:first ?item.
+          ?ps sh:targetNode ?item.
+          ?ps sh:name ?itemlabel
+        }
+        OPTIONAL {
+          ?s sh:property ?scp.
+          ?scp sh:path skos:inScheme.
+          ?scp sh:hasValue ?scheme.
+          ?concept skos:inScheme ?scheme.
+          ?concept rdfs:label ?conceptlabel.
+        }
+      }
+      GRAPH <@STAGE@> {
+        <urn:filter:@CATEGORY@> rdfs:seeAlso ?s
+      }
+    }
+  '''
+.
+
+<urn:filter:mapper> rdfs:seeAlso <http://dotwebstack.org/def/elmo-shacl#InformationProductRepresentation>;
+    rdfs:seeAlso <http://dotwebstack.org/def/elmo-shacl#DynamicEndpoint>;
+    rdfs:seeAlso <http://dotwebstack.org/def/elmo-shacl#InformationProduct>;
+    rdfs:seeAlso <http://dotwebstack.org/def/elmo-shacl#Representation>;
+    rdfs:seeAlso <http://dotwebstack.org/def/elmo-shacl#Endpoint>;
+    rdfs:seeAlso <http://dotwebstack.org/def/elmo-shacl#ParameterMapper>;
+    rdfs:seeAlso <http://dotwebstack.org/def/elmo-shacl#Parameter>
+.
+<urn:filter:defaultendpoint> rdfs:seeAlso <http://dotwebstack.org/def/elmo-shacl#Stage>;
+    rdfs:seeAlso <http://dotwebstack.org/def/elmo-shacl#Endpoint>
+.
+<urn:filter:system> rdfs:seeAlso <http://dotwebstack.org/def/elmo-shacl#Theatre>;
+    rdfs:seeAlso <http://dotwebstack.org/def/elmo-shacl#Stage>;
+    rdfs:seeAlso <http://dotwebstack.org/def/elmo-shacl#Backend>;
+    rdfs:seeAlso <http://dotwebstack.org/def/elmo-shacl#Layout>;
+    rdfs:seeAlso <http://dotwebstack.org/def/elmo-shacl#Site>
+.
+<urn:filter:frontend> rdfs:seeAlso <http://dotwebstack.org/def/elmo-shacl#ParameterMapper>;
+    rdfs:seeAlso <http://dotwebstack.org/def/elmo-shacl#Redirection>;
+    rdfs:seeAlso <http://dotwebstack.org/def/elmo-shacl#Transaction>;
+    rdfs:seeAlso <http://dotwebstack.org/def/elmo-shacl#DirectEndpoint>;
+    rdfs:seeAlso <http://dotwebstack.org/def/elmo-shacl#Service>;
+    rdfs:seeAlso <http://dotwebstack.org/def/elmo-shacl#TopLevelRepresentation>;
+    rdfs:seeAlso <http://dotwebstack.org/def/elmo-shacl#Appearance>;
+    rdfs:seeAlso <http://dotwebstack.org/def/elmo-shacl#InformationProduct>;
+    rdfs:seeAlso <http://dotwebstack.org/def/elmo-shacl#Representation>;
+    rdfs:seeAlso <http://dotwebstack.org/def/elmo-shacl#DynamicEndpoint>;
+    rdfs:seeAlso <http://dotwebstack.org/def/elmo-shacl#Fragment>;
+    rdfs:seeAlso <http://dotwebstack.org/def/elmo-shacl#DataRepresentation>;
+    rdfs:seeAlso <http://dotwebstack.org/def/elmo-shacl#InformationProductRepresentation>;
+    rdfs:seeAlso <http://dotwebstack.org/def/elmo-shacl#Endpoint>
+.
+<urn:filter:core> rdfs:seeAlso <http://dotwebstack.org/def/elmo-shacl#ResultType>;
+    rdfs:seeAlso <http://dotwebstack.org/def/elmo-shacl#ValidationStep>;
+    rdfs:seeAlso <http://dotwebstack.org/def/elmo-shacl#FlowList>;
+    rdfs:seeAlso <http://dotwebstack.org/def/elmo-shacl#Step>;
+    rdfs:seeAlso <http://dotwebstack.org/def/elmo-shacl#UpdateStep>;
+    rdfs:seeAlso <http://dotwebstack.org/def/elmo-shacl#SparqlBackend>;
+    rdfs:seeAlso <http://dotwebstack.org/def/elmo-shacl#Transaction>;
+    rdfs:seeAlso <http://dotwebstack.org/def/elmo-shacl#InformationProduct>;
+    rdfs:seeAlso <http://dotwebstack.org/def/elmo-shacl#PersistenceStep>;
+    rdfs:seeAlso <http://dotwebstack.org/def/elmo-shacl#PersistenceStrategy>;
+    rdfs:seeAlso <http://dotwebstack.org/def/elmo-shacl#Backend>;
+    rdfs:seeAlso <http://dotwebstack.org/def/elmo-shacl#ElasticSearchBackend>;
+    rdfs:seeAlso <http://dotwebstack.org/def/elmo-shacl#FileBackend>
+.
+
+config:ElmoVocabulary rdf:type elmo:Representation;
+    elmo:query '''
+    PREFIX container: <http://localhost:8080/dotwebstack/container/>
+    CONSTRUCT {
+      ?s ?p ?o
+    }
+    WHERE {
+      GRAPH container:elmo {
+        ?s ?p ?o
+      }
+    }
+  '''^^xsd:string;
+    elmo:appearance elmo:VocabularyAppearance;
+    elmo:index "1"^^xsd:string;
+    elmo:url-pattern "/query/elmo$"^^xsd:string
+.
+
+# ========================
+#
+# VALIDATION
+#
+# ========================
+
+config:Validation rdf:type elmo:Representation;
+  elmo:contains config:Validation_classes;
+  elmo:contains config:Validation_nodeshapes;
+  elmo:contains config:Validation_properties;
+  elmo:contains config:Validation_propertyshapes;
+  elmo:url-pattern "/query/validation$"^^xsd:string
+.
+config:Validation_classes rdf:type elmo:Part;
+  elmo:index "1"^^xsd:string;
+  elmo:query '''
+    PREFIX elmodata: <http://dotwebstack.org/def/>
+    SELECT ?class ?nodeshape ?nodeshape_label
+    WHERE {
+      GRAPH elmodata:elmo {
+        ?class a owl:Class
+      }
+      OPTIONAL {
+        GRAPH elmodata:elmo-shacl {
+          ?nodeshape a sh:NodeShape.
+          ?nodeshape sh:targetClass ?class
+          OPTIONAL {
+            ?nodeshape sh:name ?nodeshape_label
+          }
+        }
+      }
+    }
+    order by ?nodeshape
+  '''
+.
+config:Validation_nodeshapes rdf:type elmo:Part;
+  elmo:index "2";
+  elmo:query '''
+    PREFIX elmodata: <http://dotwebstack.org/def/>
+    SELECT ?nodeshape ?nodeshape_label ?class ?class_label
+    WHERE {
+      GRAPH elmodata:elmo-shacl {
+        ?nodeshape a sh:NodeShape.
+        ?nodeshape sh:targetClass ?targetclass.
+        OPTIONAL {
+          ?nodeshape sh:name ?nodeshape_label
+        }
+      }
+      OPTIONAL {
+        GRAPH elmodata:elmo-shacl {
+          ?nodeshape sh:targetClass ?class.
+        }
+        GRAPH elmodata:elmo {
+          ?class a owl:Class.
+          OPTIONAL {
+            ?class rdfs:label ?class_label
+          }
+        }
+      }
+    }
+    order by ?class
+  '''
+.
+config:Validation_properties rdf:type elmo:Part;
+  elmo:index "3";
+  elmo:query '''
+    PREFIX elmodata: <http://dotwebstack.org/def/>
+    SELECT ?property ?nodeshape ?nodeshape_label ?propertyshape
+    WHERE {
+      GRAPH elmodata:elmo {
+        ?property a ?type.
+        FILTER (?type = owl:ObjectProperty || ?type = owl:DatatypeProperty)
+      }
+      OPTIONAL {
+        GRAPH elmodata:elmo-shacl {
+          ?shape sh:path ?property
+          OPTIONAL {
+            ?nodeshape sh:property ?shape
+            OPTIONAL {
+              ?nodeshape sh:name ?nodeshape_label
+            }
+          }
+          OPTIONAL {
+            ?shape sh:name ?propertyshape
+          }
+        }
+      }
+    }
+    order by ?nodeshape
+  '''
+.
+config:Validation_propertyshapes rdf:type elmo:Part;
+  elmo:index "4";
+  elmo:query '''
+    PREFIX elmodata: <http://dotwebstack.org/def/>
+    SELECT ?nodeshape ?nodeshape_label ?propertypath ?propertypath_label ?property ?property_label
+    WHERE {
+      GRAPH elmodata:elmo-shacl {
+        ?propertyshape sh:path ?propertypath.
+        OPTIONAL {
+          ?propertyshape sh:name ?propertypath_label
+        }
+        OPTIONAL {
+          ?nodeshape sh:property ?propertyshape.
+          OPTIONAL {
+            ?nodeshape sh:name ?nodeshape_label
+          }
+        }
+      }
+      OPTIONAL {
+        GRAPH elmodata:elmo-shacl {
+          ?propertyshape sh:path ?property.
+        }
+        GRAPH elmodata:elmo {
+          ?property a ?type.
+          FILTER (?type = owl:ObjectProperty || ?type = owl:DatatypeProperty)
+          OPTIONAL {
+            ?property rdfs:label ?property_label
+          }
+        }
+      }
+    }
+    order by ?property ?propertypath
+  '''
+.
+
+# ========================
+#
+# CONFORMANCE CHECK
+#
+# ========================
+
+config:Conformance rdf:type elmo:Representation;
+  elmo:contains config:Conformance_classes;
+  elmo:contains config:Conformance_properties;
+  elmo:url-pattern "/query/conformance$"
+.
+config:Conformance_classes rdf:type elmo:Part;
+  elmo:index "1";
+  elmo:query '''
+    PREFIX elmodata: <http://dotwebstack.org/def/>
+    PREFIX dotwebstack: <http://dotwebstack.org/>
+    SELECT ?class (count(?item) as ?count)
+    WHERE {
+      GRAPH elmodata:elmo {
+        ?class a owl:Class
+      }
+      OPTIONAL {
+        GRAPH dotwebstack:config {
+          ?item a ?class
+        }
+      }
+    }
+    group by ?class
+    order by ?class
+  '''
+.
+config:Conformance_properties rdf:type elmo:Part;
+  elmo:index "1";
+  elmo:query '''
+    PREFIX elmodata: <http://dotwebstack.org/def/>
+    PREFIX dotwebstack: <http://dotwebstack.org/>
+    SELECT ?property (count(?item) as ?count)
+    WHERE {
+      GRAPH elmodata:elmo {
+        ?property a ?type
+        FILTER (?type = owl:ObjectProperty || ?type = owl:DatatypeProperty)
+      }
+      OPTIONAL {
+        GRAPH dotwebstack:config {
+          ?item ?property ?value
+        }
+      }
+    }
+    group by ?property
+    order by ?property
+  '''
+.
